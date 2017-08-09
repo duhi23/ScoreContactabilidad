@@ -28,12 +28,14 @@ write_excel_csv(data %>% filter(PTO_OBS==1, REG_IVR==1, REG_VALIDO==1, MES=='03'
 write_excel_csv(data %>% filter(PTO_OBS==1, REG_IVR==1, REG_VALIDO==1, MES=='06'), 
                 path = "Pto_Obs_Jun17.csv", col_names = TRUE)
 
-
-
+# Graficos Horario de llamada
 data %>% filter(PTO_OBS==1, REG_VALIDO==1, REG_IVR==1, MES=='09', HORAS!='00') %>% select(HORAS) %>% 
       table(.) %>% barplot(main="PTO OBS - Septiembre 2016")
 data %>% filter(PTO_OBS==1, REG_VALIDO==1, REG_IVR==1, MES=='12') %>% select(HORAS) %>% 
       table(.) %>% barplot(main="PTO OBS - Diciembre 2016")
 
+# Registros para la generación de variables históricas
+# Pto_Obs: Septiembre 2016 - Marzo 2016 - Agosto 2016
+data %>% filter(HISTORIA_6M_SEP==1) %>% group_by(cedula, NEW_ACCION) %>% summarise(conteo=n())
 data %>% group_by(cedula, ANIO) %>% summarise(conteo=n())
 
