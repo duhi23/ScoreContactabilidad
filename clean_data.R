@@ -215,6 +215,27 @@ rm(list=c("res4", "cons2"))
 write_excel_csv(cons3, path = "Var_Hist_3M_Mar17.csv", col_names = TRUE)
 rm(list=c("cons3"))
 
+# Pto_Obs: Marzo 2017 - Febrero 2017 - 1 Mes
+res1 <- data %>% filter(MES=='02', ANIO=='2017') %>% group_by(cedula, NEW_ACCION) %>% summarise(conteo=n()) %>% 
+      spread(key = NEW_ACCION, value = conteo)
+res2 <- data %>% filter(MES=='02', ANIO=='2017') %>% mutate(valor_pro=parse_double(valor_promesa)) %>% 
+      group_by(cedula, NEW_ACCION) %>% summarise(max_val_pro=max(valor_pro)) %>% 
+      spread(key = NEW_ACCION, value = max_val_pro)
+cons1 <- left_join(res1, res2, by = "cedula")
+rm(list=c("res1", "res2"))
+
+res3 <- data %>% filter(MES=='02', ANIO=='2017') %>% group_by(cedula) %>% 
+      summarise(max_llamada=max(duracion), min_llamada=min(duracion))
+cons2 <- left_join(cons1, res3, by = "cedula")
+rm(list=c("res3", "cons1"))
+
+res4 <- data %>% filter(MES=='02', ANIO=='2017') %>% mutate(rango_hora=cut(parse_double(HORAS),
+      breaks=c(-1,6,9,12,15,18,21,24))) %>% group_by(cedula, rango_hora) %>% 
+      summarise(conteo=n()) %>% spread(key = rango_hora, value = conteo)
+cons3 <- left_join(cons2, res4, by = "cedula")
+rm(list=c("res4", "cons2"))
+write_excel_csv(cons3, path = "Var_Hist_1M_Mar17.csv", col_names = TRUE)
+rm(list=c("cons3"))
 
 # Pto_Obs: Junio 2017 - Diciembre 2016 - Mayo 2017 - 6 Meses
 res1 <- data %>% filter(HISTORIA_6M_JUN==1) %>% group_by(cedula, NEW_ACCION) %>% summarise(conteo=n()) %>% 
@@ -258,4 +279,26 @@ res4 <- data %>% filter(HISTORIA_3M_JUN==1) %>% mutate(rango_hora=cut(parse_doub
 cons3 <- left_join(cons2, res4, by = "cedula")
 rm(list=c("res4", "cons2"))
 write_excel_csv(cons3, path = "Var_Hist_3M_Jun17.csv", col_names = TRUE)
+rm(list=c("cons3"))
+
+# Pto_Obs: Junio 2017 - Mayo 2017 - 1 Mes
+res1 <- data %>% filter(MES=='05', ANIO=='2017') %>% group_by(cedula, NEW_ACCION) %>% summarise(conteo=n()) %>% 
+      spread(key = NEW_ACCION, value = conteo)
+res2 <- data %>% filter(MES=='05', ANIO=='2017') %>% mutate(valor_pro=parse_double(valor_promesa)) %>% 
+      group_by(cedula, NEW_ACCION) %>% summarise(max_val_pro=max(valor_pro)) %>% 
+      spread(key = NEW_ACCION, value = max_val_pro)
+cons1 <- left_join(res1, res2, by = "cedula")
+rm(list=c("res1", "res2"))
+
+res3 <- data %>% filter(MES=='05', ANIO=='2017') %>% group_by(cedula) %>% 
+      summarise(max_llamada=max(duracion), min_llamada=min(duracion))
+cons2 <- left_join(cons1, res3, by = "cedula")
+rm(list=c("res3", "cons1"))
+
+res4 <- data %>% filter(MES=='05', ANIO=='2017') %>% mutate(rango_hora=cut(parse_double(HORAS),
+      breaks=c(-1,6,9,12,15,18,21,24))) %>% group_by(cedula, rango_hora) %>% 
+      summarise(conteo=n()) %>% spread(key = rango_hora, value = conteo)
+cons3 <- left_join(cons2, res4, by = "cedula")
+rm(list=c("res4", "cons2"))
+write_excel_csv(cons3, path = "Var_Hist_1M_Jun17.csv", col_names = TRUE)
 rm(list=c("cons3"))
