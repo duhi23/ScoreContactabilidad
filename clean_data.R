@@ -302,3 +302,24 @@ cons3 <- left_join(cons2, res4, by = "cedula")
 rm(list=c("res4", "cons2"))
 write_excel_csv(cons3, path = "Var_Hist_1M_Jun17.csv", col_names = TRUE)
 rm(list=c("cons3"))
+
+
+## Cruce días vencidos
+dven <- read_tsv("Dven2017.txt")
+dven_mar <- dven %>% filter(FECHA_CORTE=='201703') %>% select(4:6)
+colnames(dven_mar) <- c("c_id_deudor", "dias_mora", "fecha_corte")
+muestra_mar <- data %>% filter(MES=='03', ANIO=='2017') %>% select(5,2)
+muestra_mar$c_id_deudor <- parse_integer(muestra_mar$c_id_deudor)
+cruce_mar <- inner_join(muestra_mar, dven_mar, by='c_id_deudor') %>% group_by(cedula) %>% 
+      summarise(dias_vencido=max(dias_mora))
+write_excel_csv(cruce_mar, path="dias_ven_mar17.csv", col_names = TRUE)
+
+
+dven_jun <- dven %>% filter(FECHA_CORTE=='201706') %>% select(4:6)
+colnames(dven_jun) <- c("c_id_deudor", "dias_mora", "fecha_corte")
+muestra_jun <- data %>% filter(MES=='06', ANIO=='2017') %>% select(5,2)
+muestra_jun$c_id_deudor <- parse_integer(muestra_jun$c_id_deudor)
+
+cruce_jun <- inner_join(muestra_jun, dven_jun, by='c_id_deudor') %>% group_by(cedula) %>% 
+      summarise(dias_vencido=max(dias_mora))
+write_excel_csv(cruce_jun, path="dias_ven_jun17.csv", col_names = TRUE)
