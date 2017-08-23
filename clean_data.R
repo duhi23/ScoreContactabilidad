@@ -36,25 +36,52 @@ data %>% filter(PTO_OBS==1, REG_VALIDO==1, REG_IVR==1, MES=='09', HORAS!='00') %
 data %>% filter(PTO_OBS==1, REG_VALIDO==1, REG_IVR==1, MES=='12') %>% select(HORAS) %>% 
       table(.) %>% barplot(main="PTO OBS - Diciembre 2016")
 
-# Registros para la generación de variables históricas
+
+### Registros para la generación de variables históricas
 
 # Pto_Obs: Septiembre 2016 - Marzo 2016 - Agosto 2016 - 6 Meses
+reg_sep16_6m <- data %>% filter(ANIO=="2016", MES=="09", REG_VALIDO==1, REG_IVR==1) %>% group_by(cedula) %>% 
+      summarise(conteo=n()) %>% select(cedula)
 res1 <- data %>% filter(HISTORIA_6M_SEP==1) %>% group_by(cedula, NEW_ACCION) %>% summarise(conteo=n()) %>% 
       spread(key = NEW_ACCION, value = conteo)
-res2 <- data %>% filter(HISTORIA_6M_SEP==1) %>% mutate(valor_pro=parse_double(valor_promesa)) %>% 
+colnames(res1) <- c("cedula", "num_noident_6m", "num_llamada_6m", "num_sms_6m", "num_emails_6m", "num_visita_6m")
+cons1 <- left_join(reg_sep16_6m, res1, by = "cedula")
+rm(list=c("reg_sep16_6m", "res1"))
+
+res2 <- data %>% filter(HISTORIA_6M_SEP==1, NEW_ACCION==1) %>% group_by(cedula, VAR_DEP) %>% summarise(conteo=n()) %>% 
+      spread(key = VAR_DEP, value = conteo)
+colnames(res2) <- c("cedula", "nllamada_noident_6m", "nllamada_directa_6m", "nllamada_indirecta_6m", "nllamada_nocontacto_6m")
+cons2 <- left_join(cons1, res2, by = "cedula")
+rm(list=c("cons1", "res2"))
+
+res3 <- data %>% filter(HISTORIA_6M_SEP==1, NEW_ACCION==4) %>% group_by(cedula, VAR_DEP) %>% summarise(conteo=n()) %>% 
+      spread(key = VAR_DEP, value = conteo)
+colnames(res3) <- c("cedula", "nvisita_noident_6m", "nvisita_directa_6m", "nvisita_indirecta_6m", "nvisita_nocontacto_6m")
+cons3 <- left_join(cons2, res3, by = "cedula")
+rm(list=c("cons2", "res3"))
+
+res4 <- data %>% filter(HISTORIA_6M_SEP==1) %>% mutate(valor_pro=parse_double(valor_promesa)) %>% 
       group_by(cedula, NEW_ACCION) %>% summarise(max_val_pro=max(valor_pro)) %>% 
-      spread(key = NEW_ACCION, value = max_val_pro)
-cons1 <- left_join(res1, res2, by = "cedula")
-rm(list=c("res1", "res2"))
+      spread(key = NEW_ACCION, value = max_val_pro) %>% select(1,3,6)
+colnames(res4) <- c("cedula", "max_valpro_llamada_6m", "max_valpro_visita_6m")
+cons4 <- left_join(cons3, res4, by = "cedula")
+rm(list=c("cons3", "res4"))
 
-res3 <- data %>% filter(HISTORIA_6M_SEP==1, NEW_ACCION==1) %>% group_by(cedula) %>% 
+res5 <- data %>% filter(HISTORIA_6M_SEP==1, NEW_ACCION==1) %>% group_by(cedula) %>% 
       summarise(max_llamada=max(duracion), min_llamada=min(duracion))
-cons2 <- left_join(cons1, res3, by = "cedula")
-rm(list=c("res3", "cons1"))
+colnames(res5) <- c("cedula", "max_llamada_6m", "min_llamada_6m")
+cons5 <- left_join(cons4, res5, by = "cedula")
+rm(list=c("cons4", "res5"))
 
-res4 <- data %>% filter(HISTORIA_6M_SEP==1) %>% mutate(rango_hora=cut(parse_double(HORAS),
+###################
+# Crear variables: numero de llamadas lunes, martes ,....
+# numero de visitas lunes, martes, etc...
+# numero de llamadas en el horario .....
+# numero de visitas en el horario ....
+res6 <- data %>% filter(HISTORIA_6M_SEP==1) %>% mutate(rango_hora=cut(parse_double(HORAS),
       breaks=c(-1,6,9,12,15,18,21,24))) %>% group_by(cedula, rango_hora) %>% 
-      summarise(conteo=n()) %>% spread(key = rango_hora, value = conteo)
+      summarise(conteo=n()) %>% spread(key = rango_hora, value = conteo) %>% select(-2,-8)
+colnames(res6) <- c("cedula", "n")
 cons3 <- left_join(cons2, res4, by = "cedula")
 rm(list=c("res4", "cons2"))
 write_excel_csv(cons3, path = "Var_Hist_6M_Sep16.csv", col_names = TRUE)
@@ -319,7 +346,6 @@ dven_jun <- dven %>% filter(FECHA_CORTE=='201706') %>% select(4:6)
 colnames(dven_jun) <- c("c_id_deudor", "dias_mora", "fecha_corte")
 muestra_jun <- data %>% filter(MES=='06', ANIO=='2017') %>% select(5,2)
 muestra_jun$c_id_deudor <- parse_integer(muestra_jun$c_id_deudor)
-
 cruce_jun <- inner_join(muestra_jun, dven_jun, by='c_id_deudor') %>% group_by(cedula) %>% 
       summarise(dias_vencido=max(dias_mora))
 write_excel_csv(cruce_jun, path="dias_ven_jun17.csv", col_names = TRUE)
